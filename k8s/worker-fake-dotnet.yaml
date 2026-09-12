@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-fake-dotnet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker-fake-dotnet
+  template:
+    metadata:
+      labels:
+        app: worker-fake-dotnet
+    spec:
+      containers:
+        - name: worker-fake-dotnet
+          image: mcr.microsoft.com/dotnet/sdk:10.0
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          command:
+            - dotnet
+            - run
+            - --file
+            - /app/script.cs
+          volumeMounts:
+            - name: script
+              mountPath: /app
+      volumes:
+        - name: script
+          configMap:
+            name: worker-fake-dotnet
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: worker-fake-dotnet
+data:
+  script.cs: |
+    using System.Runtime.InteropServices;
+    
+    while (true)
+    {
+        var utcMinus3 = DateTimeOffset.UtcNow.ToOffset(
+            TimeSpan.FromHours(-3));
+
+        Console.WriteLine("Runtime: " + RuntimeInformation.FrameworkDescription);
+        Console.WriteLine(
+            $"Worker Fake: {utcMinus3:yyyy-MM-dd HH:mm:ss zzz}");
+        Console.WriteLine();
+
+        await Task.Delay(TimeSpan.FromSeconds(1));
+    }

@@ -1,0 +1,15 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: worker-fake-dotnet-scaledobject
+spec:
+  minReplicaCount: 1
+  scaleTargetRef:
+    name: worker-fake-dotnet
+  triggers:
+  - type: cron
+    metadata:
+      timezone: America/Sao_Paulo
+      start: 04 03 * * *
+      end: 08 03 * * *
+      desiredReplicas: "8"
